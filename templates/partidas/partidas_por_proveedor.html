@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Partidas del Proveedor {{ lifnr }}{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 text-center">
+  📄 Partidas del Proveedor: <strong>{{ lifnr }}</strong>
+</h2>
+
+<!-- ✅ Métricas resumen -->
+<div class="row mb-4 text-center">
+  <div class="col-12 col-md-4 mb-3">
+    <div class="card border-success shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="card-title text-success">💰 Total Monto (ML)</h6>
+        <p class="card-text fs-4 fw-bold">${{ "{:,.2f}".format(total) }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4 mb-3">
+    <div class="card border-primary shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="card-title text-primary">📑 Cantidad de Documentos</h6>
+        <p class="card-text fs-4 fw-bold">{{ cantidad }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4 mb-3">
+    <div class="card border-warning shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="card-title text-warning">📈 Promedio por Documento</h6>
+        <p class="card-text fs-4 fw-bold">${{ "{:,.2f}".format(promedio) }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Tabla responsive para pantallas grandes -->
+<div class="table-responsive d-none d-lg-block shadow-sm rounded">
+  <table class="table table-striped table-hover align-middle">
+    <thead class="table-dark">
+      <tr>
+        <th>Año</th>
+        <th>Documento</th>
+        <th>Ref</th>
+        <th>Monto (ML)</th>
+        <th>Moneda Ext.</th>
+         <th>F. Contabilización</th>
+        <th>F. Documento</th>
+        <th>F. Vto Neto</th>
+        
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in partidas %}
+      <tr>
+        <td>{{ p[0] }}</td>
+        <td>{{ p[1] }}</td>
+        <td>{{ p[2] }}</td>
+        <td>${{ "{:,.2f}".format(p[3]) }}</td>
+        <td>{{ p[4] }}</td>
+        <td>{{ p[5] }}</td>
+        <td>{{ p[6] }}</td>
+        <td>{{ p[7] }}</td>
+        
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ✅ Vista en Cards para dispositivos móviles -->
+<div class="d-block d-lg-none mt-3">
+  {% for p in partidas %}
+  <div class="card mb-3 shadow-sm">
+    <div class="card-header bg-dark text-white">
+      <strong>Documento: {{ p[1] }}</strong> | Año: {{ p[0] }}
+    </div>
+    <div class="card-body">
+      <p class="mb-1"><strong>Posición:</strong> {{ p[2] }}</p>
+      <p class="mb-1"><strong>Monto (ML):</strong> ${{ "{:,.2f}".format(p[3]) }}</p>
+      <p class="mb-1"><strong>Moneda Ext.:</strong> {{ p[4] }}</p>
+      <p class="mb-1"><strong>Fecha Contable:</strong> {{ p[5] }}</p>
+      <p class="mb-1"><strong>Fecha Doc:</strong> {{ p[6] }}</p>
+      <p class="mb-1"><strong>Fecha Registro:</strong> {{ p[7] }}</p>
+      <p class="mb-1"><strong>Asignación:</strong> {{ p[8] }}</p>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ✅ Botón volver -->
+<div class="text-center mt-4">
+  <a href="{{ url_for('proveedores_bp.admin_proveedores_esenciales') }}" class="btn btn-secondary">
+    ← Volver a Proveedores
+  </a>
+</div>
+{% endblock %}

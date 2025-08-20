@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(145deg, #003366, #007bff, #e6f0ff);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .login-card {
+      animation: slideIn 0.6s ease-out;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      background-color: #ffffff;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(-40px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .form-control:focus {
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .btn-primary {
+      transition: background-color 0.3s ease-in-out;
+      background-color: #003366;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+
+    .icon-input {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6c757d;
+    }
+
+    .form-group {
+      position: relative;
+    }
+
+    .form-group input {
+      padding-left: 35px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card login-card p-4" style="width: 100%; max-width: 400px;">
+    <div class="card-body">
+      <h3 class="text-center mb-4 text-primary">🔐 Acceso al sistema</h3>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="alert alert-danger text-center">{{ messages[0] }}</div>
+        {% endif %}
+      {% endwith %}
+
+      <form method="post">
+        <div class="form-group mb-3">
+          <i class="bi bi-person-fill icon-input"></i>
+          <input type="text" name="usuario" class="form-control" placeholder="Usuario" required>
+        </div>
+        <div class="form-group mb-4">
+          <i class="bi bi-lock-fill icon-input"></i>
+          <input type="password" name="clave" class="form-control" placeholder="Contraseña" required>
+        </div>
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary">Ingresar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+ 
+</body>
+</html>
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

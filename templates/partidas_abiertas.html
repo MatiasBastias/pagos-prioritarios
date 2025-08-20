@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Listado de Partidas Abiertas{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">📑 Partidas Abiertas 111<span class="badge bg-secondary">{{ total }}</span></h2>
+
+<!-- Tarjetas resumen con filtros -->
+<div class="row mb-4">
+  <div class="col-md-4">
+    <a href="?filtro=esenciales" class="text-decoration-none">
+      <div class="card text-white bg-primary shadow">
+        <div class="card-body">
+          <h5 class="card-title">🔐 Por Proveedor Esencial</h5>
+          <p class="card-text fs-4">{{ total_esenciales }}</p>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="?filtro=prioritarias" class="text-decoration-none">
+      <div class="card text-white bg-success shadow">
+        <div class="card-body">
+          <h5 class="card-title">⭐ Seleccionadas por Usuario</h5>
+          <p class="card-text fs-4">{{ total_prioritarias }}</p>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="?filtro=sin_seleccion" class="text-decoration-none">
+      <div class="card text-white bg-dark shadow">
+        <div class="card-body">
+          <h5 class="card-title">❓ Sin Selección</h5>
+          <p class="card-text fs-4">{{ total_sin_seleccion }}</p>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- Buscar por proveedor -->
+<form class="mb-4" method="GET" action="{{ url_for('partidas_bp.listar_partidas') }}">
+  <div class="input-group">
+    <input type="text" name="q" class="form-control" placeholder="Buscar por proveedor o planta..." value="{{ query or '' }}">
+    <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+  </div>
+</form>
+
+<!-- Tabla de partidas -->
+<table class="table table-bordered table-hover table-sm">
+  <thead class="table-light">
+    <tr>
+      <th>Planta</th>
+      <th>Proveedor</th>
+      <th>Nombre</th>
+      <th>Ref</th>
+      <th>Doc. Contable</th>
+      <th>Moneda</th>
+      <th>F. Contabilización</th>
+      <th>F. Documento</th>
+      <th>F. Vto Neto</th>
+      <th>Importe Local</th>
+      <th>Importe Ext.</th>
+      <th>Acción</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in partidas %}
+    <tr>
+      <td>{{ p.bukrs }}</td>
+      <td>{{ p.lifnr }}</td>
+      <td>{{ p.nombre_proveedor or '-' }}</td>
+      <td>{{ p.gjahr }}</td>      
+      <td>{{ p.belnr or '-' }}</td>
+      <td>{{ p.waers or '-' }}</td>
+      <td>{{ p.budat or '-' }}</td>
+      <td>{{ p.bldat or '-' }}</td>
+      <td>{{ p.zfbdt or '-' }}</td>
+      <td>${{ "{:,.2f}".format(p.dmbtr | float) if p.dmbtr else "-" }}</td>
+      <td>${{ "{:,.2f}".format(p.wrbtr | float) if p.wrbtr else "-" }}</td>
+      <td>
+        {% if p.id in prioritarias_ids %}
+          <span class="text-success">✔️ Ya seleccionada</span>
+        {% elif p.lifnr in proveedores_esenciales %}
+          <span class="text-primary">🔐 Esencial</span>
+        {% else %}
+          <form method="POST" action="{{ url_for('partidas_bp.marcar_prioritaria', partida_id=p.id) }}">
+            <button type="submit" class="btn btn-sm btn-outline-warning">⚡</button>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Paginación -->
+<nav aria-label="Paginación de partidas">
+  <ul class="pagination justify-content-center mt-4">
+    {% if page > 1 %}
+    <li class="page-item">
+      <a class="page-link" href="{{ url_for('partidas_bp.listar_partidas', q=query, filtro=filtro, page=page-1) }}">Anterior</a>
+    </li>
+    {% endif %}
+    <li class="page-item disabled">
+      <a class="page-link">Página {{ page }} de {{ total_pages }}</a>
+    </li>
+    {% if page < total_pages %}
+    <li class="page-item">
+      <a class="page-link" href="{{ url_for('partidas_bp.listar_partidas', q=query, filtro=filtro, page=page+1) }}">Siguiente</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endblock %}

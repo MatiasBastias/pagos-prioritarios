@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}📊 Dashboard de Administración{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <h2 class="mb-4 text-primary">📊 Panel de Administración</h2>
+<!-- ====== SECCIÓN 1: Indicadores de Pagos Prioritarios ====== -->
+<div class="row mb-4">
+  <!-- Total Pagos Prioritarios -->
+  <div class="col-md-3 mb-3">
+    <div class="card bg-dark text-white shadow-sm">
+      <div class="card-body text-center">
+        <h5 class="card-title">Total Pagos Prioritarios</h5>
+        <p class="display-6">{{ total_prioritarios }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Totales por Estado -->
+  {% for estado in estados %}
+    {% set color_class = "" %}
+    {% if estado[0] == "Ingresado" %}
+        {% set color_class = "background-color:#007bff; color:#fff;" %}
+    {% elif estado[0] == "A pagar" %}
+        {% set color_class = "background-color:#ffc107; color:#000;" %}
+    {% elif estado[0] == "Completado" %}
+        {% set color_class = "background-color:#28a745; color:#fff;" %}
+    {% elif estado[0] == "Error" %}
+        {% set color_class = "background-color:#dc3545; color:#fff;" %}
+    {% elif estado[0] == "En Revisión" %}
+        {% set color_class = "background-color:#17a2b8; color:#fff;" %}
+    {% else %}
+        {% set color_class = "background-color:#6c757d; color:#fff;" %}
+    {% endif %}
+
+    <div class="col-md-3 mb-3">
+      <div class="card shadow-sm" style="{{ color_class }}">
+        <div class="card-body text-center">
+          <h5 class="card-title">{{ estado[0] }}</h5>
+          <p class="display-6">{{ estado[1] }}</p>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+  <div class="card mb-4 shadow-sm">
+    <div class="card-body">
+      <h4 class="card-title mb-3">🏆 Top 5 Usuarios con Más Pedidos</h4>
+      <table class="table table-striped table-hover">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Usuario</th>
+            <th>Cantidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in top_usuarios %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ u[0] }}</td>
+            <td>{{ u[1] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- ====== SECCIÓN 2: Gráfico de Barras por Semana ====== -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-body">
+      <h4 class="card-title mb-3">📈 Partidas Prioritarias por Semana</h4>
+      <canvas id="graficoSemanas" height="100"></canvas>
+    </div>
+  </div>
+
+  
+  <!-- ====== SECCIÓN 4: Indicadores de Proveedores (mantener) ====== -->
+  
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // === Formato monetario ===
+  const formatoLatam = new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    minimumFractionDigits: 2
+  });
+
+  document.querySelectorAll(".monto").forEach(el => {
+    const valor = parseFloat(el.dataset.valor);
+    el.textContent = formatoLatam.format(valor);
+  });
+
+  // === Datos para el gráfico (rango de fechas) ===
+  const rawData = {{ partidas_por_semana|tojson }};
+  const rangos = [...new Set(rawData.map(item => item[0]))];
+  const estados = [...new Set(rawData.map(item => item[1]))];
+
+  // Colores fijos por estado
+  const coloresEstados = {
+    "Ingresado": "#007bff",
+    "A pagar": "#ffc107",
+    "Completado": "#28a745",
+    "Error": "#dc3545",
+    "En Revisión": "#17a2b8"
+  };
+
+  // Crear datasets
+  const datasets = estados.map(estado => {
+    return {
+      label: estado,
+      data: rangos.map(rango => {
+        const match = rawData.find(d => d[0] === rango && d[1] === estado);
+        return match ? match[2] : 0;
+      }),
+      backgroundColor: coloresEstados[estado] || '#6c757d' // Gris por defecto
+    };
+  });
+
+  // Render Chart
+  const ctx = document.getElementById('graficoSemanas').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: rangos, // Ej: "22/07 - 28/07"
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Partidas Prioritarias por Semana (Rango de Fechas)'
+        },
+        legend: {
+          position: 'bottom'
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          title: {
+            display: true,
+            text: 'Rango de Fechas'
+          }
+        },
+        y: {
+          stacked: true,
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Cantidad de Partidas'
+          }
+        }
+      }
+    }
+  });
+</script>
+
+
+{% endblock %}

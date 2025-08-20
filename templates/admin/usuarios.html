@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Administrar Usuarios{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-person-gear"></i> Administración de Usuarios</h2>
+<button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalNuevoUsuario">
+  ➕ Nuevo Usuario
+</button>
+<table class="table table-bordered table-hover">
+  <thead class="table-light">
+    <tr>
+      <th>👤 Usuario</th>
+      <th>📧 Email</th>
+      <th>🔐 Rol</th>
+      <th>🏭 Sociedades</th>
+      <th>⚙️ Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for u in usuarios %}
+    <tr>
+      <td>{{ u.usuario }}</td>
+      <td>{{ u.email }}</td>
+      <td>{{ u.rol }}</td>
+      <td>{{ u.plantas }}</td>
+      <td>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalPlantas{{ loop.index }}">
+          🛠️ Editar Permisos
+        </button>
+      </td>
+    </tr>
+
+    <!-- Modal -->
+    <div class="modal fade" id="modalPlantas{{ loop.index }}" tabindex="-1" aria-labelledby="modalLabel{{ loop.index }}" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form method="POST" action="{{ url_for('permisos_bp.editar_plantas_usuario', usuario=u.usuario) }}">
+            <div class="modal-header">
+              <h5 class="modal-title" id="modalLabel{{ loop.index }}">Editar permisos de <strong>{{ u.usuario }}</strong></h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            
+            <div class="modal-body">
+                     <div class="mb-3">
+  <label for="usuario{{ loop.index }}" class="form-label">👤 Usuario</label>
+  <input type="text" class="form-control" 
+         id="usuario{{ loop.index }}" 
+         name="usuario" 
+         value="{{ u.usuario }}" 
+         required>
+</div>
+
+<div class="mb-3">
+  <label for="email{{ loop.index }}" class="form-label">📧 Email</label>
+  <input type="email" class="form-control" 
+         id="email{{ loop.index }}" 
+         name="email" 
+         value="{{ u.email }}" 
+         required>
+</div>
+
+              <div class="mb-3">
+                <label for="rolSelect{{ loop.index }}" class="form-label">🔐 Rol</label>
+                <select class="form-select rol-select" id="rolSelect{{ loop.index }}" name="rol_id" data-index="{{ loop.index }}">
+                  {% for r in roles %}
+                  <option value="{{ r[0] }}" {% if u.rol_id == r[0] %}selected{% endif %}>{{ r[1] }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="plantas-container" id="plantasContainer{{ loop.index }}">
+                <label class="form-label">🏭 Sociedades habilitadas</label>
+                {% for planta in plantas %}
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="plantas" value="{{ planta[0] }}"
+                    id="check{{ loop.index }}_{{ planta[0] }}"
+                    {% if planta[0] in u.plantas_ids %}checked{% endif %}
+                    {% if u.rol == 'admin' %}disabled{% endif %}>
+                  <label class="form-check-label" for="check{{ loop.index }}_{{ planta[0] }}">
+                    {{ planta[1] }}
+                  </label>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-success">💾 Guardar</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Modal Alta de Usuario -->
+<div class="modal fade" id="modalNuevoUsuario" tabindex="-1" aria-labelledby="modalNuevoUsuarioLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('permisos_bp.nuevo_usuario') }}">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalNuevoUsuarioLabel">➕ Alta de Nuevo Usuario</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="usuario" class="form-label">👤 Usuario</label>
+            <input type="text" class="form-control" id="usuario"  name="usuario" required>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">📧 Email</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+          </div>
+          <div class="mb-3">
+            <label for="rolSelectNuevo" class="form-label">🔐 Rol</label>
+            <select class="form-select" id="rolSelectNuevo" name="rol_id" required>
+              {% for r in roles %}
+              <option value="{{ r[0] }}">{{ r[1] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="plantas-container" id="plantasContainerNuevo">
+            <label class="form-label">🏭 Sociedades habilitadas</label>
+            {% for planta in plantas %}
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="plantas" value="{{ planta[0] }}" id="plantaNuevo{{ planta[0] }}">
+              <label class="form-check-label" for="plantaNuevo{{ planta[0] }}">{{ planta[1] }}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">💾 Guardar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".rol-select").forEach(function (select) {
+      select.addEventListener("change", function () {
+        const index = this.dataset.index;
+        const container = document.getElementById("plantasContainer" + index);
+        const checkboxes = container.querySelectorAll("input[type='checkbox']");
+        const selectedText = this.options[this.selectedIndex].text.toLowerCase();
+
+        if (selectedText === "admin" || selectedText === "administrador") {
+          checkboxes.forEach(cb => cb.disabled = true);
+        } else {
+          checkboxes.forEach(cb => cb.disabled = false);
+        }
+      });
+    });
+  });
+
+  document.getElementById("rolSelectNuevo").addEventListener("change", function () {
+  const checkboxes = document.querySelectorAll("#plantasContainerNuevo input[type='checkbox']");
+  if (this.options[this.selectedIndex].text.toLowerCase() === "admin") {
+    checkboxes.forEach(cb => cb.disabled = true);
+  } else {
+    checkboxes.forEach(cb => cb.disabled = false);
+  }
+});
+</script>
+{% endblock %}

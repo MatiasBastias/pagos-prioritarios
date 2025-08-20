@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Gestión de Proveedores{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .sidebar {
+      background-color: #343a40;
+      color: white;
+      flex-shrink: 0;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 230px;
+      transform: translateX(0);
+      transition: transform 0.3s ease-in-out;
+      z-index: 1050;
+    }
+
+    /* Ocultar en pantallas pequeñas */
+    @media (max-width: 992px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+    }
+
+    /* Mostrar cuando se abre en móvil */
+    .sidebar.show {
+      transform: translateX(0) !important;
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+    }
+
+    .sidebar .nav-link:hover {
+      background-color: #495057;
+    }
+
+    .sidebar .section-title {
+      padding: 0.8rem 1rem;
+      font-size: 1rem;
+      background-color: #212529;
+      margin-bottom: 0.5rem;
+    }
+
+    .main-content {
+      flex-grow: 1;
+      padding: 15px;
+      margin-left: 230px;
+      transition: margin-left 0.3s ease-in-out;
+    }
+
+    /* En móviles sin sidebar visible */
+    @media (max-width: 992px) {
+      .main-content {
+        margin-left: 0;
+      }
+      .card p {
+        font-size: 0.9rem;
+      }
+      .card-header {
+        font-size: 1rem;
+      }
+    }
+
+    .toggle-btn {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background-color: #343a40;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 8px 10px;
+      z-index: 1100;
+      cursor: pointer;
+    }
+    .modal-content {
+  border-radius: 12px;
+  overflow: hidden;
+}
+.modal-header {
+  border-bottom: none;
+}
+.modal-footer {
+  border-top: none;
+}
+  </style>
+</head>
+<body>
+
+  <!-- Botón toggle sidebar -->
+  <button class="toggle-btn d-lg-none" onclick="toggleSidebar()">
+    <i class="bi bi-list"></i>
+  </button>
+
+  <!-- Menú lateral -->
+  <div class="sidebar d-flex flex-column p-3" id="sidebarMenu">
+    <h4 class="text-white mb-4"><i class="bi bi-building me-2"></i> Proveedores</h4>
+
+    <!-- Gestión -->
+    <div class="section-title">📁 Gestión</div>
+    <ul class="nav flex-column mb-2">
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('partidas_bp.mis_prioritarios') }}"><i class="bi bi-file-earmark-text me-2"></i> Mis Pagos Prioritarios</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('proveedores_bp.mis_proveedores_esenciales') }}"><i class="bi bi-star me-2"></i> Mis Proveedores Esenciales</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('proveedores_bp.listar_proveedores') }}"><i class="bi bi-building-fill me-2"></i> Proveedores</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('partidas_bp.listar_partidas') }}"><i class="bi bi-folder2-open me-2"></i> Partidas Abiertas</a>
+      </li>
+    </ul>
+
+    {% if session.get("rol") == "admin" %}
+    <!-- Administrador -->
+    <div class="section-title">🛠️ Administrador</div>
+    <ul class="nav flex-column mb-2">
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('proveedores_bp.reportes') }}">
+    <i class="bi bi-table"></i> Panel de Control
+</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('partidas_bp.ver_pagos_prioritarios_admin') }}"><i class="bi bi-graph-up-arrow me-2"></i> Listado de Pagos</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('proveedores_bp.admin_proveedores_esenciales') }}"><i class="bi bi-star-fill me-2"></i> Admin. Proveedores</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('permisos_bp.administrar_usuarios') }}"><i class="bi bi-shield-lock me-2"></i> Roles y Permisos</a>
+      </li>
+    </ul>
+    {% endif %}
+
+    {% if session.get('usuario') %}
+    <div class="user-footer text-white border-top pt-3 mt-auto">
+      <div><i class="bi bi-person-circle me-1"></i> {{ session.get('usuario') }}</div>
+      <div><a href="{{ url_for('login_bp.logout') }}" class="text-white text-decoration-underline"><i class="bi bi-box-arrow-right me-1"></i> Cerrar sesión</a></div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="main-content" id="mainContent">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebarMenu');
+      sidebar.classList.toggle('show');
+    }
+
+    // Cerrar la barra al hacer clic en un link en móviles
+    document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth < 992) {
+          document.getElementById('sidebarMenu').classList.remove('show');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

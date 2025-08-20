@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Mis Proveedores Esenciales{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">⭐ Mis Proveedores Esenciales</h2>
+
+{% if proveedores %}
+<table class="table table-bordered table-hover">
+  <thead class="table-light">
+    <tr>
+      <th>Código</th>
+      <th>Nombre</th>
+      <th>Motivo</th>
+      <th>Acción</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in proveedores %}
+    <tr>
+      <td>{{ p[0] }}</td>
+      <td>{{ p[1] }}</td>
+      <td>{{ p[2] }}</td>
+      <td>
+        <!-- <a href="{{ url_for('proveedores_bp.partidas_abiertas', lifnr=p[0]) }}" class="btn btn-sm btn-outline-info">
+          Ver partidas abiertas
+        </a>-->
+      <form action="{{ url_for('proveedores_bp.desmarcar_esencial') }}" method="POST" style="display:inline;"onsubmit="return confirm('¿Estás seguro de eliminar este proveedor esencial?')">
+          <input type="hidden" name="lifnr" value="{{ p[0] }}">
+          <button type="submit" class="btn btn-sm btn-outline-danger">Quitar esencial</button>
+            </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="alert alert-info">No tenés proveedores esenciales registrados.</div>
+{% endif %}
+{% endblock %}
+
+

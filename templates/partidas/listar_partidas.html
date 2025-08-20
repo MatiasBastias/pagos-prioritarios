@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Listado de Partidas Abiertas{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 text-center">📑 Partidas Abiertas <span class="badge bg-secondary">{{ total }}</span></h2>
+
+<!-- Tarjetas resumen con filtros -->
+<div class="row mb-4 text-center">
+  <div class="col-12 col-md-4 mb-2">
+    <a href="?filtro=esenciales" class="text-decoration-none">
+      <div class="card text-white bg-primary shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title">🔐 Proveedor Esencial</h6>
+          <p class="card-text fs-5">{{ total_esenciales }}</p>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-12 col-md-4 mb-2">
+    <a href="?filtro=prioritarias" class="text-decoration-none">
+      <div class="card text-white bg-success shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title">⭐ Seleccionadas Usuario</h6>
+          <p class="card-text fs-5">{{ total_prioritarias }}</p>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-12 col-md-4 mb-2">
+    <a href="?filtro=sin_seleccion" class="text-decoration-none">
+      <div class="card text-white bg-dark shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title">❓ Sin Selección</h6>
+          <p class="card-text fs-5">{{ total_sin_seleccion }}</p>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- Buscar por proveedor -->
+<form class="mb-4 d-flex gap-2" method="GET" action="{{ url_for('partidas_bp.listar_partidas') }}">
+  <input type="text" name="q" class="form-control" placeholder="Buscar por proveedor o planta..." value="{{ query or '' }}">
+  <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+</form>
+
+{% if partidas %}
+<!-- ✅ Tabla para escritorio -->
+<div class="table-responsive d-none d-lg-block">
+  <table class="table table-bordered table-hover align-middle">
+    <thead class="table-dark">
+      <tr>
+        <th>Sociedad</th>
+        <th>Nro Proveedor</th>
+        <th>Proveedor</th>
+        <th>Ref</th>
+        <th>Doc. Contable</th>
+        <th>F. Contabilización</th>
+        <th>F. Documento</th>
+        <th>F. Vto Neto</th>
+        <th>Moneda</th>
+        <th>Importe Local</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in partidas %}
+      <tr>
+        <td>{{ p.bukrs }}</td>
+        <td>{{ p.lifnr }}</td>
+        <td>{{ p.nombre_proveedor or '-' }}</td>
+        <td>{{ p.xblnr }}</td>
+        <td>{{ p.belnr }}</td>
+        <td>{{ p.budat or '-' }}</td>
+        <td>{{ p.bldat or '-' }}</td>
+        <td>{{ p.zfbdt or '-' }}</td>
+        <td>{{ p.waers }}</td>
+        <td>${{ "{:,.2f}".format(p.dmbtr | float) if p.dmbtr else "-" }}</td>
+        <td class="text-nowrap">
+          {% if (p.bukrs, p.belnr, p.gjahr) in prioritarias_claves %}
+            <span class="text-success">✔️ Ya seleccionada</span>
+          {% elif p.lifnr in proveedores_esenciales %}
+            <span class="text-primary">🔐 Esencial</span>
+          {% else %}
+            <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalComentario{{ p.bukrs }}{{ p.belnr }}{{ p.gjahr }}">⚡</button>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ✅ Vista Cards en móviles -->
+<div class="d-block d-lg-none">
+  {% for p in partidas %}
+  <div class="card mb-3 shadow-sm">
+    <div class="card-header bg-secondary text-white">
+      <strong>{{ p.nombre_proveedor or '-' }}</strong>
+      <span class="float-end">{{ p.waers }} ${{ "{:,.2f}".format(p.dmbtr | float) }}</span>
+    </div>
+    <div class="card-body">
+      <p><strong>Sociedad:</strong> {{ p.bukrs }} | <strong>Periodo:</strong> {{ p.gjahr }}</p>
+      <p><strong>Doc:</strong> {{ p.belnr }}</p>
+      <p><strong>F. Vto:</strong> {{ p.zfbdt or '-' }}</p>
+      <p><strong>Estado:</strong>
+        {% if (p.bukrs, p.belnr, p.gjahr) in prioritarias_claves %}
+          <span class="badge bg-success">Ya seleccionada</span>
+        {% elif p.lifnr in proveedores_esenciales %}
+          <span class="badge bg-primary">Esencial</span>
+        {% else %}
+          <span class="badge bg-secondary">Sin selección</span>
+        {% endif %}
+      </p>
+    </div>
+    <div class="card-footer d-flex justify-content-end">
+      {% if (p.bukrs, p.belnr, p.gjahr) not in prioritarias_claves and p.lifnr not in proveedores_esenciales %}
+        <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalComentario{{ p.bukrs }}{{ p.belnr }}{{ p.gjahr }}">⚡ Marcar</button>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ✅ Modales -->
+{% for p in partidas %}
+<div class="modal fade" id="modalComentario{{ p.bukrs }}{{ p.belnr }}{{ p.gjahr }}" tabindex="-1" aria-labelledby="modalLabelComentario{{ p.bukrs }}{{ p.belnr }}{{ p.gjahr }}" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg"> <!-- 🔹 modal-lg para mayor tamaño -->
+    <form method="POST" action="{{ url_for('partidas_bp.marcar_prioritaria') }}" class="w-100">
+      <div class="modal-content shadow-lg border-0 rounded-3">
+        
+        <!-- Header -->
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="modalLabelComentario{{ p.bukrs }}{{ p.belnr }}{{ p.gjahr }}">
+            <i class="bi bi-chat-left-text me-2"></i> Agregar Comentario
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        
+        <!-- Body -->
+        <div class="modal-body">
+          <!-- Inputs ocultos -->
+          <input type="hidden" name="bukrs" value="{{ p.bukrs }}">
+          <input type="hidden" name="belnr" value="{{ p.belnr }}">
+          <input type="hidden" name="gjahr" value="{{ p.gjahr }}">
+
+          <!-- Campo comentario -->
+          <div class="mb-3">
+            <label for="comentario{{ p.bukrs }}{{ p.belnr }}{{ p.gjahr }}" class="form-label fw-bold">Motivo</label>
+            <textarea class="form-control" id="comentario{{ p.bukrs }}{{ p.belnr }}{{ p.gjahr }}" name="comentario" rows="5" style="min-height: 120px;" required></textarea>
+          </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-circle"></i> Confirmar
+          </button>
+        </div>
+        
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endfor %}
+
+{% else %}
+<div class="alert alert-info text-center">No se encontraron partidas abiertas.</div>
+{% endif %}
+
+<!-- Paginación -->
+<nav class="mt-4">
+  <ul class="pagination justify-content-center">
+    {% if page > 1 %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('partidas_bp.listar_partidas', q=query, filtro=filtro, page=page-1) }}">Anterior</a></li>
+    {% endif %}
+    <li class="page-item disabled"><a class="page-link">Página {{ page }} de {{ total_pages }}</a></li>
+    {% if page < total_pages %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('partidas_bp.listar_partidas', q=query, filtro=filtro, page=page+1) }}">Siguiente</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endblock %}

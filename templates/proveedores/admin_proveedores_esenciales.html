@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Administrar Proveedores Esenciales{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 text-center">
+  <i class="bi bi-star-fill text-warning"></i> Administración de Proveedores Esenciales
+
+</h2>
+<a href="{{ url_for('proveedores_bp.exportar_proveedores_excel') }}" class="btn btn-success mb-3">
+    📥 Descargar Excel
+</a>
+
+<!-- ✅ Contenedor responsive -->
+<div class="table-responsive shadow-sm rounded">
+  <table class="table table-hover align-middle">
+    <thead class="table-dark">
+      <tr>
+        <th>N° Proveedor</th>
+        <th>Nombre</th>
+        <th>Usuario que lo marcó</th>
+        <th>Motivo</th>
+        <th class="text-center">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in proveedores %}
+      <tr>
+        <td class="fw-bold">{{ p.lifnr }}</td>
+        <td>{{ p.proveedor_text }}</td>
+        <td>{{ p.usuario }}</td>
+        <td>{{ p.motivo }}</td>
+        <td class="text-center">
+          <div class="btn-group" role="group">
+            <!-- 🔹 Ver Partidas Abiertas -->
+            <a href="{{ url_for('proveedores_bp.partidas_abiertas', lifnr=p.lifnr) }}" 
+               class="btn btn-sm btn-outline-info" title="Ver Partidas Abiertas">
+              <i class="bi bi-folder2-open"></i>
+            </a>
+
+            <!-- 🔹 Eliminar -->
+            <form method="POST" action="{{ url_for('proveedores_bp.admin_desmarcar_esencial') }}" 
+                  onsubmit="return confirm('¿Estás seguro de eliminar este proveedor esencial?')" 
+                  class="d-inline">
+              <input type="hidden" name="lifnr" value="{{ p.lifnr }}">
+              <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ✅ Vista en Cards para dispositivos pequeños -->
+<div class="d-block d-lg-none mt-3">
+  {% for p in proveedores %}
+  <div class="card mb-3 shadow-sm">
+    <div class="card-header bg-dark text-white d-flex justify-content-between">
+      <span><strong>{{ p.proveedor_text }}</strong></span>
+    </div>
+    <div class="card-body">
+      <p class="mb-1"><strong>N° Proveedor:</strong> {{ p.lifnr }}</p>
+      <p class="mb-1"><strong>Usuario:</strong> {{ p.usuario }}</p>
+      <p class="mb-1"><strong>Motivo:</strong> {{ p.motivo }}</p>
+    </div>
+    <div class="card-footer d-flex justify-content-end gap-2">
+      <a href="{{ url_for('proveedores_bp.partidas_abiertas', lifnr=p.lifnr) }}" class="btn btn-sm btn-outline-info">
+        <i class="bi bi-folder2-open"></i>
+      </a>
+      <form method="POST" action="{{ url_for('proveedores_bp.admin_desmarcar_esencial') }}" 
+            onsubmit="return confirm('¿Estás seguro de eliminar este proveedor esencial?')">
+        <input type="hidden" name="lifnr" value="{{ p.lifnr }}">
+        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+
