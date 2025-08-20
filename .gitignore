@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+instance/
+
+# Virtualenv
+venv/
+env/
+*.egg-info/
+
+# Logs
+*.log
+
+# IDEs
+.vscode/
+.idea/
+
+# Docker
+*.pid
+*.seed
+*.bak
+.env
+docker-compose.override.yml
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
