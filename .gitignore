@@ -10,7 +10,7 @@ instance/
 venv/
 env/
 *.egg-info/
-
+.env
 # Logs
 *.log
 
